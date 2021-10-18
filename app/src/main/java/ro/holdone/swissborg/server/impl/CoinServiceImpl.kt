@@ -75,7 +75,7 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
             val tickerSubject = BehaviorSubject.create<BookEvent>()
             bookTickerSubjectMap[pair.name] = tickerSubject
             //TODO: send prec and length as params
-            serverManager.send(ClientAction.SubscribeBook(pair, precision, length))
+            serverManager.send(ClientAction.SubscribeBook(pair, precision, length, "F1"))
             Timber.d("created a new subscription for ticker $pair")
             return tickerSubject
         } finally {
@@ -118,7 +118,7 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
         snapshot: ServerEvent.ChannelSnapshot
     ) {
         // Ticker only accepts float updates
-        val floatValues = (snapshot.values as? List<Float>) ?: return
+        val floatValues = snapshot.values.filterIsInstance<Float>().takeIf { it.size == snapshot.values.size } ?: return
         assert(floatValues.size == 10)
         val tickerSnapshot = TickerSnapshot(
             channelId = snapshot.chanelId,
@@ -141,17 +141,17 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
         subject: Subject<BookEvent>,
         snapshot: ServerEvent.ChannelSnapshot
     ) {
-        snapshot.values.filterIsInstance<Float>().takeIf { it.size == snapshot.values.size }?.let {
+        snapshot.values.filterIsInstance<Number>().takeIf { it.size == snapshot.values.size }?.let {
             // Handle one update only
             subject.onNext(BookEvent.Update(snapshot.chanelId, bookEntryFromList(it)))
         } ?: run {
-            val updates = snapshot.values.map { it as List<Float> }.map { bookEntryFromList(it) }
+            val updates = snapshot.values.map { it as List<Number> }.map { bookEntryFromList(it) }
             subject.onNext(BookEvent.Snapshot(snapshot.chanelId, updates))
         }
     }
 
-    private fun bookEntryFromList(values: List<Float>): BookEntry {
+    private fun bookEntryFromList(values: List<Number>): BookEntry {
         assert(values.size == 3)
-        return BookEntry(values[0], values[1], values[2])
+        return BookEntry(values[0].toFloat(), values[1].toInt(), values[2].toFloat())
     }
 }

@@ -13,6 +13,7 @@ import ro.holdone.swissborg.server.model.BookEvent
 import ro.holdone.swissborg.server.model.CoinsPair
 import ro.holdone.swissborg.server.model.TickerSnapshot
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 @HiltViewModel
@@ -64,12 +65,22 @@ class TickerViewModel @Inject constructor(
         Timber.d("process update $update")
         if (update.entry.amount > 0) {
             //Process bid update
-
+            val bidOrders = bidOrders.value?.toMutableList() ?: mutableListOf()
+            if (update.entry.count == 0) {
+                bidOrders.removeAll { it.price == update.entry.price }
+            } else {
+                bidOrders.add(update.entry)
+            }
+            this.bidOrders.value = bidOrders
         } else {
             //Process ask update
             val askOrders = askOrders.value?.toMutableList() ?: mutableListOf()
-            askOrders.add(update.entry)
-            askOrders.take(length).sortedBy { it.count }
+            if (update.entry.count == 0) {
+                askOrders.removeAll { it.price == update.entry.price }
+            } else {
+                askOrders.add(update.entry)
+            }
+            this.askOrders.value = askOrders
         }
     }
 

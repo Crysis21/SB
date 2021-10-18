@@ -1,5 +1,7 @@
 package ro.holdone.swissborg.server.model
 
+import com.squareup.moshi.Json
+
 sealed class ClientAction(val event: ClientActionType) {
     val name: String = javaClass.simpleName
 
@@ -9,7 +11,14 @@ sealed class ClientAction(val event: ClientActionType) {
         val channel = Channel.TICKER
     }
 
-    class SubscribeBook(val pair: CoinsPair, val prec: String, val length: String) : ClientAction(ClientActionType.SUBSCRIBE) {
+    class SubscribeBook(
+        val pair: CoinsPair,
+        @Json(name = "precision")
+        val prec: String,
+        val length: String,
+        @Json(name = "freq")
+        val frequency: String
+    ) : ClientAction(ClientActionType.SUBSCRIBE) {
         val channel = Channel.BOOK
     }
 }

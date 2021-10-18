@@ -34,7 +34,8 @@ class ClientActionAdapter {
                 action.channel,
                 action.pair,
                 action.prec,
-                action.length))
+                action.length,
+                action.frequency))
             }
         }
     }
