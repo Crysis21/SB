@@ -1,7 +1,7 @@
 package ro.holdone.swissborg.server.model
 
 data class TickerSnapshot(
-    val channelId: Int,
+    val channelId: String,
     val bid: Float,
     val bidSize: Float,
     val ask: Float,

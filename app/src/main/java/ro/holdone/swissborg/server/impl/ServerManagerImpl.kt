@@ -2,6 +2,7 @@ package ro.holdone.swissborg.server.impl
 
 import com.squareup.moshi.JsonReader
 import io.reactivex.rxjava3.core.Observable
+import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.PublishSubject
 import ro.holdone.swissborg.server.ServerManager
 import okhttp3.*
@@ -16,10 +17,13 @@ import ro.holdone.swissborg.server.model.adapters.ClientActionAdapter
 import ro.holdone.swissborg.server.model.adapters.ServerEventAdapter
 import timber.log.Timber
 import java.net.SocketTimeoutException
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: OkHttpClient) :
     ServerManager {
+
+    private var pingTimerDisposable: Disposable? = null
 
     private val serverEventsSubject = PublishSubject.create<ServerEvent>()
 
@@ -70,9 +74,15 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
 
     private fun onConnected(newConnected: Boolean) {
         Timber.d("onConnected $newConnected")
-        send(ClientAction.Ping)
-        send(ClientAction.SubscribeTicker(CoinsPair.BTCUSD))
-        send(ClientAction.SubscribeBook(CoinsPair.BTCUSD, "P0", "25"))
+        talking = newConnected
+        pingTimerDisposable?.dispose()
+
+        if (!newConnected) return
+        pingTimerDisposable = Observable.interval(PING_TIMER_INTERVAL, TimeUnit.SECONDS)
+            .takeWhile { talking }
+            .subscribe {
+                send(ClientAction.Ping)
+            }
     }
 
     private fun processServerEvent(data: String) {
@@ -142,4 +152,8 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
         websocket?.send(json)
     }
 
+
+    companion object {
+        private val PING_TIMER_INTERVAL: Long = 60
+    }
 }

@@ -25,7 +25,18 @@ sealed class ServerEvent(val event: ServerEventType) {
         val channel: Channel,
 
         @Json(name = "chanId")
-        val chanelId: String
+        val channelId: String,
+
+        val pair: String,
+
+        @Json(name = "prec")
+        val precision: String?,
+
+        @Json(name = "freq")
+        val frequency: String?,
+
+        @Json(name = "len")
+        val length: String?
     ) : ServerEvent(event)
 
     class Unsubscribed(
