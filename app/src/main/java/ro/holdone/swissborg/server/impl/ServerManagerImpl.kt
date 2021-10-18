@@ -30,6 +30,7 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
     private var websocket: WebSocket? = null
 
     private var talking = false
+    private var backlog = mutableListOf<ClientAction>()
 
     private val clientActionAdapter = ClientActionAdapter()
     private val serverEventAdapter = ServerEventAdapter()
@@ -78,6 +79,15 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
         pingTimerDisposable?.dispose()
 
         if (!newConnected) return
+        startPingAndSendBacklog()
+    }
+
+    private fun startPingAndSendBacklog() {
+        while (backlog.isNotEmpty()) {
+            transmit(backlog.removeFirst())
+        }
+
+        pingTimerDisposable?.dispose()
         pingTimerDisposable = Observable.interval(PING_TIMER_INTERVAL, TimeUnit.SECONDS)
             .takeWhile { talking }
             .subscribe {
@@ -143,7 +153,11 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
 
     override fun send(action: ClientAction) {
         Timber.d("send ${action.name}")
-        transmit(action)
+        if (talking) {
+            transmit(action)
+        } else {
+            backlog.add(action)
+        }
     }
 
     private fun transmit(action: ClientAction) {
