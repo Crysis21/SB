@@ -8,10 +8,18 @@ interface ServerManager {
 
     val serverEvents: Observable<ServerEvent>
 
+    val connectionStateUpdates: Observable<ConnectionState>
+
     fun connect()
 
     fun disconnect()
 
     fun send(action: ClientAction)
 
+    enum class ConnectionState {
+        IDLE,
+        CONNECTING,
+        CONNECTED,
+        DISCONNECTED
+    }
 }

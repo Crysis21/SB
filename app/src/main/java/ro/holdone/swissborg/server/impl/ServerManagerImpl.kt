@@ -1,12 +1,17 @@
 package ro.holdone.swissborg.server.impl
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkRequest
 import com.squareup.moshi.JsonReader
+import dagger.hilt.android.qualifiers.ApplicationContext
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
+import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.PublishSubject
 import okhttp3.*
 import okio.Buffer
-import okio.ByteString
 import ro.holdone.swissborg.BuildConfig
 import ro.holdone.swissborg.di.WSOkHttpClient
 import ro.holdone.swissborg.server.ServerManager
@@ -19,16 +24,26 @@ import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: OkHttpClient) :
+class ServerManagerImpl @Inject constructor(
+    @ApplicationContext val context: Context,
+    @WSOkHttpClient val okHttpClient: OkHttpClient
+) :
     ServerManager {
 
     private var pingTimerDisposable: Disposable? = null
+    private val hasNetworkConnectivitySubject = BehaviorSubject.createDefault(false)
+    private val connectionStateSubject =
+        BehaviorSubject.createDefault(ServerManager.ConnectionState.IDLE)
 
     private val serverEventsSubject = PublishSubject.create<ServerEvent>()
 
     private var websocket: WebSocket? = null
 
-    private var talking = false
+    private var connectionState = ServerManager.ConnectionState.IDLE
+        set(value) {
+            field = value
+            connectionStateSubject.onNext(value)
+        }
     private var backlog = mutableListOf<ClientAction>()
 
     private val clientActionAdapter = ClientActionAdapter()
@@ -36,6 +51,9 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
 
     override val serverEvents: Observable<ServerEvent>
         get() = serverEventsSubject
+
+    override val connectionStateUpdates: Observable<ServerManager.ConnectionState>
+        get() = connectionStateSubject
 
     private val webSocketListener = object : WebSocketListener() {
 
@@ -52,7 +70,7 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
             Timber.e(t)
             if (t is SocketTimeoutException) {
                 // No longer connected to server. This should be translated as a failed pong
-                talking = false
+                connectionState = ServerManager.ConnectionState.DISCONNECTED
             }
             didDisconnect()
         }
@@ -62,10 +80,6 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
             processServerEvent(text)
         }
 
-        override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-            Timber.d("onMessage ${bytes.size} bytes")
-        }
-
         override fun onOpen(webSocket: WebSocket, response: Response) {
             Timber.d("onOpen $response")
             onConnected(true)
@@ -73,8 +87,9 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
     }
 
     private fun onConnected(newConnected: Boolean) {
-        Timber.d("onConnected $newConnected")
-        talking = newConnected
+        Timber.d("onConnected $this $newConnected")
+        connectionState =
+            if (newConnected) ServerManager.ConnectionState.CONNECTED else ServerManager.ConnectionState.DISCONNECTED
         pingTimerDisposable?.dispose()
 
         if (!newConnected) return
@@ -88,7 +103,7 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
 
         pingTimerDisposable?.dispose()
         pingTimerDisposable = Observable.interval(PING_TIMER_INTERVAL, TimeUnit.SECONDS)
-            .takeWhile { talking }
+            .takeWhile { connectionState == ServerManager.ConnectionState.CONNECTED }
             .subscribe {
                 send(ClientAction.Ping)
             }
@@ -117,14 +132,12 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
         }
 
         val actualEvent = event ?: return
-        Timber.d("decoded event $actualEvent")
         serverEventsSubject.onNext(actualEvent)
     }
 
     private fun didDisconnect() {
         Timber.d("didDisconnect")
 
-        websocket?.cancel()
         websocket?.close(1000, null)
         websocket = null
 
@@ -132,7 +145,15 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
     }
 
     override fun connect() {
-        Timber.d("connectIfNeeded")
+        Timber.d("connect state = $connectionState")
+        connectIfNeeded()
+        startNetworkCallback()
+    }
+
+    private fun connectIfNeeded() {
+        if (connectionState == ServerManager.ConnectionState.CONNECTING
+            || connectionState == ServerManager.ConnectionState.CONNECTED) return
+
         if (websocket != null) {
             websocket?.close(1000, null)
             websocket = null
@@ -148,16 +169,22 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
     override fun disconnect() {
         Timber.d("disconnect")
 
-        websocket?.close(1000, null)
+        connectionState = ServerManager.ConnectionState.DISCONNECTED
+        backlog.clear()
+
+        websocket?.close(1000, "app is closing")
+        websocket?.cancel()
 
         pingTimerDisposable?.dispose()
         pingTimerDisposable = null
+
+        stopNetworkCallback()
     }
 
 
     override fun send(action: ClientAction) {
         Timber.d("send ${action.name}")
-        if (talking) {
+        if (connectionState == ServerManager.ConnectionState.CONNECTED) {
             transmit(action)
         } else {
             backlog.add(action)
@@ -168,6 +195,45 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
         val json = clientActionAdapter.toJson(action)
         Timber.d("transmit $json")
         websocket?.send(json)
+    }
+
+
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+
+        override fun onAvailable(network: Network) {
+            Timber.d("onAvailable $network")
+            hasNetworkConnectivitySubject.onNext(true)
+            if (connectionState == ServerManager.ConnectionState.DISCONNECTED) {
+                connectIfNeeded()
+            }
+        }
+
+        override fun onLost(network: Network) {
+            Timber.d("onLost $network")
+            hasNetworkConnectivitySubject.onNext(false)
+        }
+    }
+
+    private fun startNetworkCallback() {
+        Timber.d("startNetworkCallback")
+        val cm: ConnectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val builder: NetworkRequest.Builder = NetworkRequest.Builder()
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.N) {
+            cm.registerDefaultNetworkCallback(networkCallback)
+        } else {
+            cm.registerNetworkCallback(
+                builder.build(), networkCallback
+            )
+        }
+    }
+
+    private fun stopNetworkCallback() {
+        Timber.d("stopNetworkCallback")
+        val cm: ConnectivityManager =
+            context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        cm.unregisterNetworkCallback(networkCallback)
     }
 
 
