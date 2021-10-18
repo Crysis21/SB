@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import ro.holdone.swissborg.R
 import ro.holdone.swissborg.server.model.BookEntry
+import ro.holdone.swissborg.ui.views.VolumeIndicatorView
 
 sealed class BookItem(val entry: BookEntry) {
     class Ask(entry: BookEntry) : BookItem(entry)
@@ -30,7 +31,8 @@ sealed class BookItem(val entry: BookEntry) {
 class BookItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
     fun bind(bookEntry: BookEntry) {
         itemView.findViewById<TextView>(R.id.volume).text = bookEntry.amount.toString()
-        itemView.findViewById<TextView>(R.id.price).text = bookEntry.price.toString()
+        itemView.findViewById<TextView>(R.id.price).text = "${bookEntry.price}"
+        itemView.findViewById<VolumeIndicatorView>(R.id.volume_indicator).progress = bookEntry.count.toFloat() / bookEntry.maxCount
     }
 
     fun cleanUp() {

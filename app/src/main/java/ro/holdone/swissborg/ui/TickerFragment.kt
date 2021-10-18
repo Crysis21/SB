@@ -52,9 +52,12 @@ class TickerFragment : Fragment() {
     }
 
     private fun setupBooks() {
-        binding.askRecyclerView.layoutManager = LinearLayoutManager(context)
-        binding.bidRecyclerView.layoutManager = LinearLayoutManager(context)
-
+        binding.askRecyclerView.layoutManager = object: LinearLayoutManager(context) {
+            override fun canScrollVertically(): Boolean = false
+        }
+        binding.bidRecyclerView.layoutManager = object: LinearLayoutManager(context) {
+            override fun canScrollVertically(): Boolean = false
+        }
         binding.askRecyclerView.adapter = askAdapter
         binding.bidRecyclerView.adapter = bidAdapter
 

@@ -41,7 +41,7 @@ class TickerViewModel @Inject constructor(
             }, { Timber.e(it) })
             .dispose(disposeBag)
 
-        coinService.subscribeBook(CoinsPair.BTCUSD, precision, length.toString())
+        coinService.subscribeBook(CoinsPair.BTCUSD, precision, length.toString(), frequency)
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ event ->
                 processSnapshot(event)
@@ -51,12 +51,18 @@ class TickerViewModel @Inject constructor(
     }
 
     private fun processSnapshot(snapshot: BookSnapshot) {
-        bidOrders.value = snapshot.updates.filter { it.amount > 0 }.sortedBy { it.count }.take(
+        val bids = snapshot.updates.filter { it.amount > 0 }.sortedBy { it.count }.take(
             length
         )
-        askOrders.value = snapshot.updates.filter { it.amount < 0 }.sortedBy { it.count }.take(
+        val maxBidCount = bids.maxOf { it.count }
+        bids.forEach { it.maxCount = maxBidCount }
+        bidOrders.value = bids
+        val asks = snapshot.updates.filter { it.amount < 0 }.sortedBy { it.count }.take(
             length
         )
+        val maxAskCount = asks.maxOf { it.count }
+        asks.forEach { it.maxCount = maxAskCount }
+        askOrders.value = asks
     }
 
     override fun onCleared() {
@@ -68,7 +74,8 @@ class TickerViewModel @Inject constructor(
     }
 
     companion object {
-        private const val precision = "P0"
+        private const val precision = "P2"
         private const val length = 25
+        private const val frequency = "F0"
     }
 }

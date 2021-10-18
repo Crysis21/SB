@@ -9,4 +9,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="bid_color">#08A113</color>
     <color name="ask_color">#B71C1C</color>
+    <color name="volume_indicator_bid">#1A1B5E20</color>
+    <color name="volume_indicator_ask">#1AB71C1C</color>
 </resources>

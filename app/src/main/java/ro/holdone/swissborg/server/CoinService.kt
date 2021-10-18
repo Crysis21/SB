@@ -9,6 +9,6 @@ interface CoinService {
     fun subscribeTicker(pair: CoinsPair): Observable<TickerSnapshot>
     fun unsubscribeTicker(pair: CoinsPair)
 
-    fun subscribeBook(pair: CoinsPair, precision: String, length: String): Observable<BookSnapshot>
+    fun subscribeBook(pair: CoinsPair, precision: String, length: String, frequency: String): Observable<BookSnapshot>
     fun unsubscribeBook(pair: CoinsPair)
 }

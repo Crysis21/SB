@@ -94,7 +94,8 @@ class CoinServiceImpl @Inject constructor(
     override fun subscribeBook(
         pair: CoinsPair,
         precision: String,
-        length: String
+        length: String,
+        frequency: String
     ): Observable<BookSnapshot> {
         Timber.d("subscribe book for $pair")
         try {
@@ -105,7 +106,7 @@ class CoinServiceImpl @Inject constructor(
             }
             val tickerSubject = BehaviorSubject.create<BookSnapshot>()
             bookSubjectMap[pair] = tickerSubject
-            val request = ClientAction.SubscribeBook(pair, precision, length, "F1")
+            val request = ClientAction.SubscribeBook(pair, precision, length, frequency)
             bookRequests[pair] = request
             serverManager.send(request)
             Timber.d("created a new subscription for ticker $pair")
