@@ -4,13 +4,12 @@ import com.squareup.moshi.JsonReader
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.PublishSubject
-import ro.holdone.swissborg.server.ServerManager
 import okhttp3.*
 import okio.Buffer
 import okio.ByteString
 import ro.holdone.swissborg.BuildConfig
 import ro.holdone.swissborg.di.WSOkHttpClient
-import ro.holdone.swissborg.server.model.CoinsPair
+import ro.holdone.swissborg.server.ServerManager
 import ro.holdone.swissborg.server.model.ClientAction
 import ro.holdone.swissborg.server.model.ServerEvent
 import ro.holdone.swissborg.server.model.adapters.ClientActionAdapter
@@ -147,7 +146,12 @@ class ServerManagerImpl @Inject constructor(@WSOkHttpClient val okHttpClient: Ok
     }
 
     override fun disconnect() {
-        TODO("Not yet implemented")
+        Timber.d("disconnect")
+
+        websocket?.close(1000, null)
+
+        pingTimerDisposable?.dispose()
+        pingTimerDisposable = null
     }
 
 

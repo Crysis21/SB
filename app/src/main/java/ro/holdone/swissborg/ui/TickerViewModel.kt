@@ -25,6 +25,7 @@ class TickerViewModel @Inject constructor(
     var pair = MutableLiveData<CoinsPair>()
 
     fun trackPair(coinPair: CoinsPair) {
+        Timber.d("track $coinPair")
         pair.value = coinPair
 
         //Dispose previous tracked items on this VM
@@ -41,6 +42,9 @@ class TickerViewModel @Inject constructor(
 
     override fun onCleared() {
         disposeBag.dispose()
+        pair.value?.let {
+            coinService.unsubscribeTicker(it)
+        }
         super.onCleared()
     }
 }

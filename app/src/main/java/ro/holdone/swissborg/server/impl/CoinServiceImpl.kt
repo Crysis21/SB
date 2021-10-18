@@ -5,6 +5,7 @@ import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.Subject
+import ro.holdone.swissborg.extensions.dispose
 import ro.holdone.swissborg.server.CoinService
 import ro.holdone.swissborg.server.ServerManager
 import ro.holdone.swissborg.server.model.ClientAction
@@ -27,6 +28,7 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
         serverManager.serverEvents
             .observeOn(Schedulers.io())
             .subscribe({ processServerEvent(it) }, { Timber.e(it) })
+            .dispose(disposeBag)
     }
 
     override fun subscribeTicker(pair: CoinsPair): Observable<TickerSnapshot> {
@@ -48,7 +50,17 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
     }
 
     override fun unsubscribeTicker(pair: CoinsPair) {
-        TODO("Not yet implemented")
+        try {
+            channelsLock.lock()
+            coinTickerSubjectMap[pair.name]?.let {
+                Timber.d("found an existing subscription for $pair")
+                if (!it.hasObservers()) {
+                    coinTickerSubjectMap.remove(pair.name)
+                }
+            }
+        } finally {
+            channelsLock.unlock()
+        }
     }
 
 
