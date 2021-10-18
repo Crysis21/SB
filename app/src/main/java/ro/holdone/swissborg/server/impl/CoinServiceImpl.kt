@@ -10,6 +10,7 @@ import ro.holdone.swissborg.server.CoinService
 import ro.holdone.swissborg.server.ServerManager
 import ro.holdone.swissborg.server.model.*
 import timber.log.Timber
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import javax.inject.Inject
 
@@ -22,7 +23,7 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
     private val coinTickerSubjectMap = mutableMapOf<String, Subject<TickerSnapshot>>()
     private val coinTickerChannelMap = mutableMapOf<String, String>()
 
-    private val bookTickerSubjectMap = mutableMapOf<String, Subject<BookEvent>>()
+    private val bookTickerSubjectMap = mutableMapOf<String, BehaviorSubject<BookSnapshot>>()
     private val bookTickerChannelMap = mutableMapOf<String, String>()
 
     init {
@@ -64,20 +65,24 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
         }
     }
 
-    override fun subscribeBook(pair: CoinsPair, precision: String, length: String): Observable<BookEvent> {
+    override fun subscribeBook(
+        pair: CoinsPair,
+        precision: String,
+        length: String
+    ): Observable<BookSnapshot> {
         Timber.d("subscribe book for $pair")
         try {
             bookChannelsLock.lock()
             bookTickerSubjectMap[pair.name]?.let {
                 Timber.d("found an existing subscription for $pair")
-                return it
+                return it.debounce(100, TimeUnit.MILLISECONDS)
             }
-            val tickerSubject = BehaviorSubject.create<BookEvent>()
+            val tickerSubject = BehaviorSubject.create<BookSnapshot>()
             bookTickerSubjectMap[pair.name] = tickerSubject
             //TODO: send prec and length as params
             serverManager.send(ClientAction.SubscribeBook(pair, precision, length, "F1"))
             Timber.d("created a new subscription for ticker $pair")
-            return tickerSubject
+            return tickerSubject.debounce(100, TimeUnit.MILLISECONDS)
         } finally {
             bookChannelsLock.unlock()
         }
@@ -118,7 +123,9 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
         snapshot: ServerEvent.ChannelSnapshot
     ) {
         // Ticker only accepts float updates
-        val floatValues = snapshot.values.filterIsInstance<Float>().takeIf { it.size == snapshot.values.size } ?: return
+        val floatValues =
+            snapshot.values.filterIsInstance<Float>().takeIf { it.size == snapshot.values.size }
+                ?: return
         assert(floatValues.size == 10)
         val tickerSnapshot = TickerSnapshot(
             channelId = snapshot.chanelId,
@@ -138,15 +145,21 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
     }
 
     private fun updateBookValues(
-        subject: Subject<BookEvent>,
+        subject: BehaviorSubject<BookSnapshot>,
         snapshot: ServerEvent.ChannelSnapshot
     ) {
         snapshot.values.filterIsInstance<Number>().takeIf { it.size == snapshot.values.size }?.let {
             // Handle one update only
-            subject.onNext(BookEvent.Update(snapshot.chanelId, bookEntryFromList(it)))
+            val snapshotValues = subject.value?.updates?.toMutableList() ?: mutableListOf()
+            val entry = bookEntryFromList(it)
+            snapshotValues.removeAll { it.price == entry.price}
+            if (entry.count > 0) {
+                snapshotValues.add(entry)
+            }
+            subject.onNext(BookSnapshot(snapshot.chanelId, snapshotValues))
         } ?: run {
             val updates = snapshot.values.map { it as List<Number> }.map { bookEntryFromList(it) }
-            subject.onNext(BookEvent.Snapshot(snapshot.chanelId, updates))
+            subject.onNext(BookSnapshot(snapshot.chanelId, updates))
         }
     }
 

@@ -58,6 +58,9 @@ class TickerFragment : Fragment() {
         binding.askRecyclerView.adapter = askAdapter
         binding.bidRecyclerView.adapter = bidAdapter
 
+        binding.askRecyclerView.itemAnimator = null
+        binding.bidRecyclerView.itemAnimator = null
+
         tickerViewModel.askOrders.observe(viewLifecycleOwner) { orders ->
             askAdapter.submitList(orders.map { BookItem.Ask(it) })
         }

@@ -8,10 +8,7 @@ import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import ro.holdone.swissborg.extensions.dispose
 import ro.holdone.swissborg.server.CoinService
-import ro.holdone.swissborg.server.model.BookEntry
-import ro.holdone.swissborg.server.model.BookEvent
-import ro.holdone.swissborg.server.model.CoinsPair
-import ro.holdone.swissborg.server.model.TickerSnapshot
+import ro.holdone.swissborg.server.model.*
 import timber.log.Timber
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
@@ -47,41 +44,19 @@ class TickerViewModel @Inject constructor(
         coinService.subscribeBook(CoinsPair.BTCUSD, precision, length.toString())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe({ event ->
-                when (event) {
-                    is BookEvent.Snapshot -> processSnapshot(event)
-                    is BookEvent.Update -> processUpdate(event)
-                }
+                processSnapshot(event)
             }, { Timber.e(it) })
             .dispose(disposeBag)
 
     }
 
-    private fun processSnapshot(snapshot: BookEvent.Snapshot) {
-        bidOrders.value = snapshot.updates.filter { it.amount > 0 }.sortedBy { it.count }
-        askOrders.value = snapshot.updates.filter { it.amount < 0 }.sortedBy { it.count }
-    }
-
-    private fun processUpdate(update: BookEvent.Update) {
-        Timber.d("process update $update")
-        if (update.entry.amount > 0) {
-            //Process bid update
-            val bidOrders = bidOrders.value?.toMutableList() ?: mutableListOf()
-            if (update.entry.count == 0) {
-                bidOrders.removeAll { it.price == update.entry.price }
-            } else {
-                bidOrders.add(update.entry)
-            }
-            this.bidOrders.value = bidOrders
-        } else {
-            //Process ask update
-            val askOrders = askOrders.value?.toMutableList() ?: mutableListOf()
-            if (update.entry.count == 0) {
-                askOrders.removeAll { it.price == update.entry.price }
-            } else {
-                askOrders.add(update.entry)
-            }
-            this.askOrders.value = askOrders
-        }
+    private fun processSnapshot(snapshot: BookSnapshot) {
+        bidOrders.value = snapshot.updates.filter { it.amount > 0 }.sortedBy { it.count }.take(
+            length
+        )
+        askOrders.value = snapshot.updates.filter { it.amount < 0 }.sortedBy { it.count }.take(
+            length
+        )
     }
 
     override fun onCleared() {
