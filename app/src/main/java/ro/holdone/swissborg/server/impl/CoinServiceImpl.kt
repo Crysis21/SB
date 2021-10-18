@@ -8,10 +8,7 @@ import io.reactivex.rxjava3.subjects.Subject
 import ro.holdone.swissborg.extensions.dispose
 import ro.holdone.swissborg.server.CoinService
 import ro.holdone.swissborg.server.ServerManager
-import ro.holdone.swissborg.server.model.ClientAction
-import ro.holdone.swissborg.server.model.CoinsPair
-import ro.holdone.swissborg.server.model.ServerEvent
-import ro.holdone.swissborg.server.model.TickerSnapshot
+import ro.holdone.swissborg.server.model.*
 import timber.log.Timber
 import java.util.concurrent.locks.ReentrantLock
 import javax.inject.Inject
@@ -19,10 +16,14 @@ import javax.inject.Inject
 class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : CoinService {
 
     private var disposeBag = CompositeDisposable()
-    private val channelsLock = ReentrantLock()
+    private val coinChannelsLock = ReentrantLock()
+    private val bookChannelsLock = ReentrantLock()
 
     private val coinTickerSubjectMap = mutableMapOf<String, Subject<TickerSnapshot>>()
     private val coinTickerChannelMap = mutableMapOf<String, String>()
+
+    private val bookTickerSubjectMap = mutableMapOf<String, Subject<BookEvent>>()
+    private val bookTickerChannelMap = mutableMapOf<String, String>()
 
     init {
         serverManager.serverEvents
@@ -34,7 +35,7 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
     override fun subscribeTicker(pair: CoinsPair): Observable<TickerSnapshot> {
         Timber.d("subscribe ticker for $pair")
         try {
-            channelsLock.lock()
+            coinChannelsLock.lock()
             coinTickerSubjectMap[pair.name]?.let {
                 Timber.d("found an existing subscription for $pair")
                 return it
@@ -45,13 +46,13 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
             Timber.d("created a new subscription for ticker $pair")
             return tickerSubject
         } finally {
-            channelsLock.unlock()
+            coinChannelsLock.unlock()
         }
     }
 
     override fun unsubscribeTicker(pair: CoinsPair) {
         try {
-            channelsLock.lock()
+            coinChannelsLock.lock()
             coinTickerSubjectMap[pair.name]?.let {
                 Timber.d("found an existing subscription for $pair")
                 if (!it.hasObservers()) {
@@ -59,20 +60,51 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
                 }
             }
         } finally {
-            channelsLock.unlock()
+            coinChannelsLock.unlock()
         }
     }
 
+    override fun subscribeBook(pair: CoinsPair, precision: String, length: String): Observable<BookEvent> {
+        Timber.d("subscribe book for $pair")
+        try {
+            bookChannelsLock.lock()
+            bookTickerSubjectMap[pair.name]?.let {
+                Timber.d("found an existing subscription for $pair")
+                return it
+            }
+            val tickerSubject = BehaviorSubject.create<BookEvent>()
+            bookTickerSubjectMap[pair.name] = tickerSubject
+            //TODO: send prec and length as params
+            serverManager.send(ClientAction.SubscribeBook(pair, precision, length))
+            Timber.d("created a new subscription for ticker $pair")
+            return tickerSubject
+        } finally {
+            bookChannelsLock.unlock()
+        }
+    }
+
+    override fun unsubscribeBook(pair: CoinsPair) {
+        TODO("Not yet implemented")
+    }
 
     private fun processServerEvent(event: ServerEvent) {
         when (event) {
             is ServerEvent.Subscribed -> {
-                coinTickerChannelMap[event.channelId] = event.pair
+                when (event.channel) {
+                    Channel.TICKER -> coinTickerChannelMap[event.channelId] = event.pair
+                    Channel.BOOK -> bookTickerChannelMap[event.channelId] = event.pair
+                }
             }
             is ServerEvent.ChannelSnapshot -> {
-                val coinPair = coinTickerChannelMap[event.chanelId] ?: return
-                coinTickerSubjectMap[coinPair]?.let {
-                    updateTickerValues(it, event)
+                coinTickerChannelMap[event.chanelId]?.let { tickerPair ->
+                    coinTickerSubjectMap[tickerPair]?.let {
+                        updateTickerValues(it, event)
+                    }
+                }
+                bookTickerChannelMap[event.chanelId]?.let { bookPair ->
+                    bookTickerSubjectMap[bookPair]?.let {
+                        updateBookValues(it, event)
+                    }
                 }
             }
             is ServerEvent.Unsubscribed -> {
@@ -81,7 +113,6 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
         }
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun updateTickerValues(
         subject: Subject<TickerSnapshot>,
         snapshot: ServerEvent.ChannelSnapshot
@@ -104,5 +135,23 @@ class CoinServiceImpl @Inject constructor(val serverManager: ServerManager) : Co
         )
 
         subject.onNext(tickerSnapshot)
+    }
+
+    private fun updateBookValues(
+        subject: Subject<BookEvent>,
+        snapshot: ServerEvent.ChannelSnapshot
+    ) {
+        snapshot.values.filterIsInstance<Float>().takeIf { it.size == snapshot.values.size }?.let {
+            // Handle one update only
+            subject.onNext(BookEvent.Update(snapshot.chanelId, bookEntryFromList(it)))
+        } ?: run {
+            val updates = snapshot.values.map { it as List<Float> }.map { bookEntryFromList(it) }
+            subject.onNext(BookEvent.Snapshot(snapshot.chanelId, updates))
+        }
+    }
+
+    private fun bookEntryFromList(values: List<Float>): BookEntry {
+        assert(values.size == 3)
+        return BookEntry(values[0], values[1], values[2])
     }
 }
