@@ -4,6 +4,8 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.35885416666666664" />
+        <entry key="app/src/main/res/layout/ask_entry.xml" value="0.35885416666666664" />
+        <entry key="app/src/main/res/layout/bid_entry.xml" value="0.35885416666666664" />
         <entry key="app/src/main/res/layout/fragment_ticker.xml" value="0.35885416666666664" />
       </map>
     </option>
