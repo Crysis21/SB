@@ -7,11 +7,11 @@ sealed class ClientAction(val event: ClientActionType) {
 
     object Ping : ClientAction(ClientActionType.PING)
 
-    class SubscribeTicker(val pair: CoinsPair) : ClientAction(ClientActionType.SUBSCRIBE) {
+    data class SubscribeTicker(val pair: CoinsPair) : ClientAction(ClientActionType.SUBSCRIBE) {
         val channel = Channel.TICKER
     }
 
-    class SubscribeBook(
+    data class SubscribeBook(
         val pair: CoinsPair,
         @Json(name = "precision")
         val prec: String,

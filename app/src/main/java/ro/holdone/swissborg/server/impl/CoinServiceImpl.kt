@@ -23,11 +23,13 @@ class CoinServiceImpl @Inject constructor(
     private val coinChannelsLock = ReentrantLock()
     private val bookChannelsLock = ReentrantLock()
 
+
     private val tickerSubjectMap = mutableMapOf<CoinsPair, Subject<TickerSnapshot>>()
     private val tickerChannelMap = mutableMapOf<String, CoinsPair>()
 
     private val bookSubjectMap = mutableMapOf<CoinsPair, BehaviorSubject<BookSnapshot>>()
     private val bookChannelMap = mutableMapOf<String, CoinsPair>()
+    private val bookRequests = mutableMapOf<CoinsPair, ClientAction.SubscribeBook>()
 
     init {
         serverManager.serverEvents
@@ -49,7 +51,7 @@ class CoinServiceImpl @Inject constructor(
 
     private fun restoreSubscriptions() {
         tickerSubjectMap.keys.forEach { serverManager.send(ClientAction.SubscribeTicker(it)) }
-        bookSubjectMap.keys.forEach { }
+        bookSubjectMap.keys.mapNotNull { bookRequests[it] }.forEach { serverManager.send(it) }
     }
 
     private fun clearSubscriptions() {
@@ -103,8 +105,9 @@ class CoinServiceImpl @Inject constructor(
             }
             val tickerSubject = BehaviorSubject.create<BookSnapshot>()
             bookSubjectMap[pair] = tickerSubject
-            //TODO: send prec and length as params
-            serverManager.send(ClientAction.SubscribeBook(pair, precision, length, "F1"))
+            val request = ClientAction.SubscribeBook(pair, precision, length, "F1")
+            bookRequests[pair] = request
+            serverManager.send(request)
             Timber.d("created a new subscription for ticker $pair")
             return tickerSubject.debounce(100, TimeUnit.MILLISECONDS)
         } finally {
