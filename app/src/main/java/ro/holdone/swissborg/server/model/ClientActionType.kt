@@ -8,4 +8,7 @@ enum class ClientActionType {
 
     @Json(name = "subscribe")
     SUBSCRIBE,
+
+    @Json(name = "unsubscribe")
+    UNSUBSCRIBE
 }

@@ -30,12 +30,26 @@ class ClientActionAdapter {
                 )
             )
             is ClientAction.SubscribeBook -> {
-                adapter.toJson(ClientActionModel(action.event,
-                action.channel,
-                action.pair,
-                action.prec,
-                action.length,
-                action.frequency))
+                adapter.toJson(
+                    ClientActionModel(
+                        action.event,
+                        action.channel,
+                        action.pair,
+                        action.prec,
+                        action.length,
+                        action.frequency
+                    )
+                )
+            }
+            is ClientAction.Unsubscribe -> {
+                adapter.toJson(
+                    ClientActionModel(
+                        action.event,
+                        null,
+                        null,
+                        channelId = action.channelId
+                    )
+                )
             }
         }
     }

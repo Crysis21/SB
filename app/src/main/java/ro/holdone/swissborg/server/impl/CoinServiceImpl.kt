@@ -50,11 +50,13 @@ class CoinServiceImpl @Inject constructor(
     }
 
     private fun restoreSubscriptions() {
+        Timber.d("restore subscriptions")
         tickerSubjectMap.keys.forEach { serverManager.send(ClientAction.SubscribeTicker(it)) }
         bookSubjectMap.keys.mapNotNull { bookRequests[it] }.forEach { serverManager.send(it) }
     }
 
     private fun clearSubscriptions() {
+        Timber.d("clear subscriptions")
         tickerChannelMap.clear()
         bookChannelMap.clear()
     }
@@ -80,10 +82,14 @@ class CoinServiceImpl @Inject constructor(
     override fun unsubscribeTicker(pair: CoinsPair) {
         try {
             coinChannelsLock.lock()
-            tickerSubjectMap[pair]?.let {
+            tickerSubjectMap[pair]?.let { subject ->
                 Timber.d("found an existing subscription for $pair")
-                if (!it.hasObservers()) {
+                if (!subject.hasObservers()) {
                     tickerSubjectMap.remove(pair)
+                    val channelId =
+                        tickerChannelMap.filter { it.value == pair }.map { it.key }.first()
+                    serverManager.send(ClientAction.Unsubscribe(channelId))
+                    tickerChannelMap.remove(channelId)
                 }
             }
         } finally {
@@ -117,7 +123,22 @@ class CoinServiceImpl @Inject constructor(
     }
 
     override fun unsubscribeBook(pair: CoinsPair) {
-        TODO("Not yet implemented")
+        try {
+            bookChannelsLock.lock()
+            bookSubjectMap[pair]?.let { subject ->
+                Timber.d("found an existing book for $pair")
+                if (!subject.hasObservers()) {
+                    Timber.d("removing book subject for $pair")
+                    bookSubjectMap.remove(pair)
+                    val channelId =
+                        bookChannelMap.filter { it.value == pair }.map { it.key }.first()
+                    serverManager.send(ClientAction.Unsubscribe(channelId))
+                    bookChannelMap.remove(channelId)
+                }
+            }
+        } finally {
+            bookChannelsLock.unlock()
+        }
     }
 
     private fun processServerEvent(event: ServerEvent) {

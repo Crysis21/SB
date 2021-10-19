@@ -21,4 +21,10 @@ sealed class ClientAction(val event: ClientActionType) {
     ) : ClientAction(ClientActionType.SUBSCRIBE) {
         val channel = Channel.BOOK
     }
+
+    class Unsubscribe(
+        @Json(name = "chanId")
+        var channelId: String
+    ) :
+        ClientAction(ClientActionType.UNSUBSCRIBE)
 }

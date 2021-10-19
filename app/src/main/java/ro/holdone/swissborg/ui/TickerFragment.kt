@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
 import ro.holdone.swissborg.databinding.FragmentTickerBinding
+import ro.holdone.swissborg.extensions.roundTo
 import ro.holdone.swissborg.server.model.CoinsPair
 
 @AndroidEntryPoint
@@ -40,6 +41,10 @@ class TickerFragment : Fragment() {
 
         setupTicker()
         setupBooks()
+
+        binding.orderBook.setOnClickListener {
+            showPrecisionPicker()
+        }
     }
 
     private fun setupTicker() {
@@ -48,7 +53,7 @@ class TickerFragment : Fragment() {
             binding.price.text = snapshot.lastPrice.toString()
             binding.lowPrice.text = snapshot.low.toString()
             binding.highPrice.text = snapshot.high.toString()
-            binding.dailyChange.text = "${snapshot.dailyChangePerc}%"
+            binding.dailyChange.text = "${snapshot.dailyChangePerc.roundTo(3)}%"
         }
     }
 
@@ -71,5 +76,10 @@ class TickerFragment : Fragment() {
         tickerViewModel.bidOrders.observe(viewLifecycleOwner) { orders ->
             bidAdapter.submitList(orders.map { BookItem.Bid(it) })
         }
+    }
+
+    private fun showPrecisionPicker() {
+        val dialog = PrecisionSelectorDialog()
+        dialog.show(childFragmentManager, "precision_picker")
     }
 }

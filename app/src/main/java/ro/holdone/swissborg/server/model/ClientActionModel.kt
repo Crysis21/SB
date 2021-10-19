@@ -19,5 +19,8 @@ data class ClientActionModel(
     val length: String? = null,
 
     @Json(name = "freq")
-    val frequency: String? = null
+    val frequency: String? = null,
+
+    @Json(name = "chanId")
+    val channelId: String? = null
 )
