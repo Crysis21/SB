@@ -48,6 +48,7 @@ class TickerFragment : Fragment() {
             binding.price.text = snapshot.lastPrice.toString()
             binding.lowPrice.text = snapshot.low.toString()
             binding.highPrice.text = snapshot.high.toString()
+            binding.dailyChange.text = "${snapshot.dailyChangePerc}%"
         }
     }
 

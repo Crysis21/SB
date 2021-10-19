@@ -3,19 +3,21 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_marginTop="1dp"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginTop="1dp">
 
     <ro.holdone.swissborg.ui.views.VolumeIndicatorView
         android:id="@+id/volume_indicator"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        app:progressColor="@color/volume_indicator_bid"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:origin="end" />
+        app:origin="end"
+        app:progressColor="@color/volume_indicator_bid" />
+
     <TextView
         android:id="@+id/volume"
+        android:textSize="@dimen/book_entry_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -26,11 +28,14 @@
     <TextView
         android:id="@+id/price"
         android:layout_width="wrap_content"
+        android:layout_marginVertical="@dimen/book_entry_vertical_margin"
         android:layout_height="wrap_content"
+        android:textSize="@dimen/book_entry_text"
+        android:textColor="@color/bid_color"
+        android:layout_marginEnd="@dimen/margin_tiny"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        android:textColor="@color/bid_color"
         tools:text="64500" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

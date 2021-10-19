@@ -12,14 +12,17 @@
         android:layout_height="0dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:progressColor="@color/volume_indicator_ask"
-        app:origin="start" />
+        app:origin="start"
+        app:progressColor="@color/volume_indicator_ask" />
 
     <TextView
         android:id="@+id/price"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginVertical="@dimen/book_entry_vertical_margin"
+        android:layout_marginStart="@dimen/margin_tiny"
         android:textColor="@color/ask_color"
+        android:textSize="@dimen/book_entry_text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -29,6 +32,7 @@
         android:id="@+id/volume"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textSize="@dimen/book_entry_text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
