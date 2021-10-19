@@ -74,7 +74,7 @@ class TickerViewModel @Inject constructor(
     }
 
     companion object {
-        private const val precision = "P2"
+        private const val precision = "P1"
         private const val length = 25
         private const val frequency = "F0"
     }

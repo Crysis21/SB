@@ -146,6 +146,7 @@ class ServerManagerImpl @Inject constructor(
 
     override fun connect() {
         Timber.d("connect state = $connectionState")
+        connectionState = ServerManager.ConnectionState.IDLE
         connectIfNeeded()
         startNetworkCallback()
     }
@@ -169,14 +170,12 @@ class ServerManagerImpl @Inject constructor(
     override fun disconnect() {
         Timber.d("disconnect")
 
-        connectionState = ServerManager.ConnectionState.DISCONNECTED
         backlog.clear()
-
-        websocket?.close(1000, "app is closing")
-        websocket?.cancel()
 
         pingTimerDisposable?.dispose()
         pingTimerDisposable = null
+
+        websocket?.close(1000, "app is closing")
 
         stopNetworkCallback()
     }

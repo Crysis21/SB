@@ -24,11 +24,15 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+    }
+
+    override fun onStart() {
+        super.onStart()
         serverManager.connect()
     }
 
-    override fun onDestroy() {
+    override fun onStop() {
         serverManager.disconnect()
-        super.onDestroy()
+        super.onStop()
     }
 }

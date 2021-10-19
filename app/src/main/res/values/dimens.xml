@@ -4,4 +4,5 @@
     <dimen name="margin_tiny">4dp</dimen>
     <dimen name="book_entry_text">12sp</dimen>
     <dimen name="book_entry_vertical_margin">3dp</dimen>
+    <dimen name="margin_small">8dp</dimen>
 </resources>

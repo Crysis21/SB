@@ -46,9 +46,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginEnd="@dimen/margin_normal"
+            android:textColor="?accentTextColor"
             android:textSize="22sp"
             android:textStyle="bold"
-            android:textColor="?accentTextColor"
             app:layout_constraintBottom_toTopOf="@id/daily_change"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="@id/coin_icon"
@@ -130,21 +130,33 @@
             app:layout_constraintTop_toTopOf="@id/high_label"
             tools:text="1232.00" />
 
+        <TextView
+            android:id="@+id/order_book"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_normal"
+            android:layout_marginTop="@dimen/margin_normal"
+            android:text="@string/order_book"
+            android:textColor="?accentTextColor"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/low_label"/>
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/bid_recycler_view"
             android:layout_width="0dp"
-            android:layout_marginStart="@dimen/margin_normal"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_normal"
+            android:layout_marginStart="@dimen/margin_normal"
+            android:layout_marginTop="@dimen/margin_small"
             app:layout_constraintEnd_toStartOf="@id/ask_recycler_view"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/high_label" />
+            app:layout_constraintTop_toBottomOf="@id/order_book" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/ask_recycler_view"
             android:layout_width="0dp"
-            android:layout_marginEnd="@dimen/margin_normal"
             android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/margin_normal"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toEndOf="@id/bid_recycler_view"
             app:layout_constraintTop_toTopOf="@id/bid_recycler_view" />
