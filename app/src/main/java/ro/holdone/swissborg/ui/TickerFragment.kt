@@ -81,10 +81,10 @@ class TickerFragment : Fragment() {
         binding.bidRecyclerView.itemAnimator = null
 
         tickerViewModel.askOrders.observe(viewLifecycleOwner) { orders ->
-            askAdapter.submitList(orders.map { BookItem.Ask(it) })
+            askAdapter.submitList(orders)
         }
         tickerViewModel.bidOrders.observe(viewLifecycleOwner) { orders ->
-            bidAdapter.submitList(orders.map { BookItem.Bid(it) })
+            bidAdapter.submitList(orders)
         }
     }
 

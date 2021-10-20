@@ -13,9 +13,9 @@ import ro.holdone.swissborg.server.model.BookEntry
 import ro.holdone.swissborg.ui.views.VolumeIndicatorView
 import kotlin.math.absoluteValue
 
-sealed class BookItem(val entry: BookEntry) {
-    class Ask(entry: BookEntry) : BookItem(entry)
-    class Bid(entry: BookEntry) : BookItem(entry)
+sealed class BookItem(val entry: BookEntry?) {
+    class Ask(entry: BookEntry?) : BookItem(entry)
+    class Bid(entry: BookEntry?) : BookItem(entry)
 
     companion object {
         val diffUtil = object : DiffUtil.ItemCallback<BookItem>() {
@@ -31,10 +31,21 @@ sealed class BookItem(val entry: BookEntry) {
 }
 
 class BookItemViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-    fun bind(bookEntry: BookEntry) {
-        itemView.findViewById<TextView>(R.id.volume).text = "%4f".format(bookEntry.amount.roundTo(4).absoluteValue)
-        itemView.findViewById<TextView>(R.id.price).text = "${bookEntry.price}"
-        itemView.findViewById<VolumeIndicatorView>(R.id.volume_indicator).progress = bookEntry.count.toFloat() / bookEntry.maxCount
+    fun bind(entry: BookEntry?) {
+        val volumeView = itemView.findViewById<TextView>(R.id.volume)
+        val priceView = itemView.findViewById<TextView>(R.id.price)
+        val volumeIndicatorView = itemView.findViewById<VolumeIndicatorView>(R.id.volume_indicator)
+        entry?.let { bookEntry ->
+            volumeView.text =
+                "%4f".format(bookEntry.amount.roundTo(4).absoluteValue)
+            priceView.text = "${bookEntry.price}"
+            volumeIndicatorView.progress =
+                bookEntry.count.toFloat() / bookEntry.maxCount
+        } ?: run {
+            volumeView.text = "--"
+            priceView.text = "--"
+            volumeIndicatorView.progress = 0.0F
+        }
     }
 }
 

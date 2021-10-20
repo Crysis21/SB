@@ -22,8 +22,8 @@ class TickerViewModel @Inject constructor(
 
     var tickerSnapshot = MutableLiveData<TickerSnapshot>()
     var pair = MutableLiveData<CoinsPair>()
-    var bidOrders = MutableLiveData<List<BookEntry>>()
-    var askOrders = MutableLiveData<List<BookEntry>>()
+    var bidOrders = MutableLiveData<List<BookItem.Bid>>((0 until 25).map { BookItem.Bid(null) })
+    var askOrders = MutableLiveData<List<BookItem.Ask>>((0 until 25).map { BookItem.Ask(null) })
     var precision = MutableLiveData(Precision.P1)
 
     fun trackPair(coinPair: CoinsPair) {
@@ -71,13 +71,13 @@ class TickerViewModel @Inject constructor(
         )
         val maxBidCount = bids.maxOf { it.count }
         bids.forEach { it.maxCount = maxBidCount }
-        bidOrders.value = bids
+        bidOrders.value = bids.map { BookItem.Bid(it) }
         val asks = snapshot.updates.filter { it.amount < 0 }.sortedBy { it.count }.take(
             length
         )
         val maxAskCount = asks.maxOf { it.count }
         asks.forEach { it.maxCount = maxAskCount }
-        askOrders.value = asks
+        askOrders.value = asks.map { BookItem.Ask(it) }
     }
 
     override fun onCleared() {
