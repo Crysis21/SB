@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="?appBackgroundColor">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -68,37 +69,36 @@
             android:id="@+id/volume_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginTop="24dp"
-            android:text="@string/vol"
+            android:layout_marginEnd="@dimen/margin_normal"
+            android:text="@string/volume"
             android:textAllCaps="true"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/coin_icon" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/low_label" />
 
         <TextView
             android:id="@+id/volume"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_normal"
-            app:layout_constraintBottom_toBottomOf="@id/volume_label"
-            app:layout_constraintStart_toEndOf="@id/volume_label"
-            app:layout_constraintTop_toTopOf="@+id/volume_label"
+            app:layout_constraintEnd_toEndOf="@id/volume_label"
+            app:layout_constraintTop_toBottomOf="@id/volume_label"
             tools:text="1232.00" />
 
         <TextView
             android:id="@+id/low_label"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/margin_normal"
+            android:layout_marginTop="16dp"
             android:text="@string/low"
             android:textAllCaps="true"
-            app:layout_constraintStart_toStartOf="@id/volume_label"
-            app:layout_constraintTop_toBottomOf="@id/volume_label" />
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/coin_icon" />
 
         <TextView
             android:id="@+id/low_price"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/margin_normal"
+            android:layout_marginStart="@dimen/margin_small"
             app:layout_constraintBottom_toBottomOf="@id/low_label"
             app:layout_constraintStart_toEndOf="@id/low_label"
             app:layout_constraintTop_toTopOf="@id/low_label"
@@ -117,13 +117,13 @@
             android:layout_height="wrap_content"
             android:text="@string/high"
             android:textAllCaps="true"
-            app:layout_constraintBottom_toBottomOf="@id/low_label"
-            app:layout_constraintStart_toEndOf="@id/vertical_guide"
-            app:layout_constraintTop_toTopOf="@id/low_label" />
+            app:layout_constraintStart_toStartOf="@id/low_label"
+            app:layout_constraintTop_toBottomOf="@+id/low_label" />
 
         <TextView
             android:id="@+id/high_price"
             android:layout_width="wrap_content"
+            android:layout_marginStart="@dimen/margin_small"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="@id/high_label"
             app:layout_constraintStart_toEndOf="@id/high_label"
@@ -140,17 +140,64 @@
             android:textColor="?accentTextColor"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/low_label"/>
+            app:layout_constraintTop_toBottomOf="@id/high_label" />
+
+        <View
+            android:id="@+id/book_divider"
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:layout_marginTop="@dimen/margin_normal"
+            android:background="@color/divider_color"
+            app:layout_constraintTop_toBottomOf="@id/order_book" />
+
+        <TextView
+            android:id="@+id/book_precision"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/margin_normal"
+            android:background="@drawable/button_pill_background"
+            android:backgroundTint="@color/precision_picker_color"
+            android:minWidth="100dp"
+            android:paddingHorizontal="@dimen/margin_normal"
+            android:paddingVertical="@dimen/margin_tiny"
+            android:textAlignment="center"
+            app:layout_constraintBottom_toBottomOf="@id/order_book"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@id/order_book"
+            tools:text="$0.01" />
+
+        <TextView
+            android:id="@+id/bid_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_normal"
+            android:text="@string/bid"
+            android:textAllCaps="true"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@id/bid_recycler_view"
+            app:layout_constraintTop_toBottomOf="@id/book_divider" />
+
+        <TextView
+            android:id="@+id/ask_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ask"
+            android:textAllCaps="true"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="@id/ask_recycler_view"
+            app:layout_constraintTop_toTopOf="@id/bid_text_view" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/bid_recycler_view"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/margin_normal"
-            android:layout_marginTop="@dimen/margin_small"
+            android:layout_marginTop="@dimen/margin_tiny"
             app:layout_constraintEnd_toStartOf="@id/ask_recycler_view"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/order_book" />
+            app:layout_constraintTop_toBottomOf="@id/bid_text_view" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/ask_recycler_view"

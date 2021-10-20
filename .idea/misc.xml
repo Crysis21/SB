@@ -3,6 +3,11 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
+        <entry key="app/src/main/res/drawable/bottom_sheet_dialog_background.xml" value="0.375" />
+        <entry key="app/src/main/res/drawable/button_pill_background.xml" value="0.21666666666666667" />
+        <entry key="app/src/main/res/drawable/ic_btc_logo.xml" value="0.375" />
+        <entry key="app/src/main/res/drawable/list_divider.xml" value="0.375" />
+        <entry key="app/src/main/res/drawable/splash_drawable.xml" value="0.375" />
         <entry key="app/src/main/res/layout/activity_main.xml" value="0.35885416666666664" />
         <entry key="app/src/main/res/layout/ask_entry.xml" value="0.35885416666666664" />
         <entry key="app/src/main/res/layout/bid_entry.xml" value="0.35885416666666664" />

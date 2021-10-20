@@ -6,7 +6,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.view.isVisible
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.viewModels
+import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialogFragment
@@ -22,6 +24,11 @@ class PrecisionSelectorDialog : BottomSheetDialogFragment() {
 
     private val tickerViewModel: TickerViewModel by viewModels({ requireParentFragment() })
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setStyle(DialogFragment.STYLE_NORMAL, R.style.SwissborgBottomSheet)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -35,7 +42,11 @@ class PrecisionSelectorDialog : BottomSheetDialogFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         binding.cancelButton.setOnClickListener { dismiss() }
-        binding.precisionRecyclerView.layoutManager = LinearLayoutManager(context)
+        binding.precisionRecyclerView.layoutManager = object: LinearLayoutManager(context) {
+            override fun canScrollVertically(): Boolean {
+                return false
+            }
+        }
         binding.precisionRecyclerView.adapter = precisionAdapter
 
         tickerViewModel.precision.observe(viewLifecycleOwner) {

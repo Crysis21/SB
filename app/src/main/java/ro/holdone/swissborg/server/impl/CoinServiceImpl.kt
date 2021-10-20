@@ -87,7 +87,7 @@ class CoinServiceImpl @Inject constructor(
                 if (!subject.hasObservers()) {
                     tickerSubjectMap.remove(pair)
                     val channelId =
-                        tickerChannelMap.filter { it.value == pair }.map { it.key }.first()
+                        tickerChannelMap.filter { it.value == pair }.map { it.key }.firstOrNull() ?: return
                     serverManager.send(ClientAction.Unsubscribe(channelId))
                     tickerChannelMap.remove(channelId)
                 }
@@ -131,7 +131,7 @@ class CoinServiceImpl @Inject constructor(
                     Timber.d("removing book subject for $pair")
                     bookSubjectMap.remove(pair)
                     val channelId =
-                        bookChannelMap.filter { it.value == pair }.map { it.key }.first()
+                        bookChannelMap.filter { it.value == pair }.map { it.key }.firstOrNull() ?: return
                     serverManager.send(ClientAction.Unsubscribe(channelId))
                     bookChannelMap.remove(channelId)
                 }

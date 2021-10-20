@@ -1,9 +1,12 @@
 <resources>
     <string name="app_name">SwissBorg</string>
-    <string name="vol">vol:</string>
-    <string name="low">low:</string>
-    <string name="high">high:</string>
+    <string name="volume">Volume</string>
+    <string name="low">Low:</string>
+    <string name="high">High:</string>
     <string name="btc_usd">BTC/USD</string>
     <string name="order_book">Order Book</string>
     <string name="cancel">Cancel</string>
+    <string name="ask">Ask</string>
+    <string name="bid">Bid</string>
+    <string name="change_book_precision">Change Book Precision</string>
 </resources>

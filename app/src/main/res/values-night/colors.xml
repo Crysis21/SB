@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="divider_color">#333333</color>
+    <color name="precision_picker_color">#4C5F6F</color>
+    <color name="splash_background">#000000</color>
+    <color name="system_toolbars">#1C1C1D</color>
+    <color name="precision_item_text">#FFFFFF</color>
+    <color name="green_price">#4FCA58</color>
+    <color name="red_price">#C65850</color>
+</resources>

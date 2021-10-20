@@ -17,9 +17,10 @@
 
     <TextView
         android:id="@+id/volume"
-        android:textSize="@dimen/book_entry_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:textSize="@dimen/book_entry_text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -28,11 +29,11 @@
     <TextView
         android:id="@+id/price"
         android:layout_width="wrap_content"
-        android:layout_marginVertical="@dimen/book_entry_vertical_margin"
         android:layout_height="wrap_content"
-        android:textSize="@dimen/book_entry_text"
-        android:textColor="@color/bid_color"
+        android:layout_marginVertical="@dimen/book_entry_vertical_margin"
         android:layout_marginEnd="@dimen/margin_tiny"
+        android:textColor="@color/bid_color"
+        android:textSize="@dimen/book_entry_text"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"

@@ -8,6 +8,8 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.channels.ticker
+import ro.holdone.swissborg.R
 import ro.holdone.swissborg.databinding.FragmentTickerBinding
 import ro.holdone.swissborg.extensions.roundTo
 import ro.holdone.swissborg.server.model.CoinsPair
@@ -42,9 +44,6 @@ class TickerFragment : Fragment() {
         setupTicker()
         setupBooks()
 
-        binding.orderBook.setOnClickListener {
-            showPrecisionPicker()
-        }
     }
 
     private fun setupTicker() {
@@ -54,14 +53,25 @@ class TickerFragment : Fragment() {
             binding.lowPrice.text = snapshot.low.toString()
             binding.highPrice.text = snapshot.high.toString()
             binding.dailyChange.text = "${snapshot.dailyChangePerc.roundTo(3)}%"
+            binding.dailyChange.setTextColor(
+                resources.getColor(if (snapshot.dailyChangePerc > 0) R.color.green_price else R.color.red_price)
+            )
+        }
+
+        tickerViewModel.precision.observe(viewLifecycleOwner) { precision ->
+            binding.bookPrecision.text = precision.precisionDecimals
+        }
+
+        binding.bookPrecision.setOnClickListener {
+            showPrecisionPicker()
         }
     }
 
     private fun setupBooks() {
-        binding.askRecyclerView.layoutManager = object: LinearLayoutManager(context) {
+        binding.askRecyclerView.layoutManager = object : LinearLayoutManager(context) {
             override fun canScrollVertically(): Boolean = false
         }
-        binding.bidRecyclerView.layoutManager = object: LinearLayoutManager(context) {
+        binding.bidRecyclerView.layoutManager = object : LinearLayoutManager(context) {
             override fun canScrollVertically(): Boolean = false
         }
         binding.askRecyclerView.adapter = askAdapter

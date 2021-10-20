@@ -5,4 +5,6 @@
     <dimen name="book_entry_text">12sp</dimen>
     <dimen name="book_entry_vertical_margin">3dp</dimen>
     <dimen name="margin_small">8dp</dimen>
+    <dimen name="bottom_sheet_corner_radius">16dp</dimen>
+    <dimen name="margin_large">32dp</dimen>
 </resources>
