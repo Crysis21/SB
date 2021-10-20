@@ -4,14 +4,12 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkRequest
-import com.squareup.moshi.JsonReader
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.reactivex.rxjava3.core.Observable
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.BehaviorSubject
 import io.reactivex.rxjava3.subjects.PublishSubject
 import okhttp3.*
-import okio.Buffer
 import ro.holdone.swissborg.BuildConfig
 import ro.holdone.swissborg.di.WSOkHttpClient
 import ro.holdone.swissborg.server.ServerManager
@@ -47,7 +45,7 @@ class ServerManagerImpl @Inject constructor(
     private var backlog = mutableListOf<ClientAction>()
 
     private val clientActionAdapter = ClientActionEncoder()
-    private val serverEventAdapter = ServerEventDecoder()
+    private val serverEventDecoder = ServerEventDecoder()
 
     override val serverEvents: Observable<ServerEvent>
         get() = serverEventsSubject
@@ -111,27 +109,8 @@ class ServerManagerImpl @Inject constructor(
 
     private fun processServerEvent(data: String) {
         if (data.isEmpty()) return
-        val buffer = Buffer()
-        buffer.readFrom(data.byteInputStream())
-        val reader = JsonReader.of(buffer)
-        val startToken = reader.peek()
-        var event: ServerEvent? = null
 
-        when (startToken) {
-            JsonReader.Token.BEGIN_ARRAY -> {
-                // Process channel snapshot update array
-                event = serverEventAdapter.fromArray(reader)
-            }
-            JsonReader.Token.BEGIN_OBJECT -> {
-                // Process event JSON
-                event = serverEventAdapter.fromJson(data)
-            }
-            else -> {
-                Timber.e("Invalid token encountered $startToken. We don't know how to processs this event")
-            }
-        }
-
-        val actualEvent = event ?: return
+        val actualEvent = serverEventDecoder.decode(data) ?: return
         serverEventsSubject.onNext(actualEvent)
     }
 

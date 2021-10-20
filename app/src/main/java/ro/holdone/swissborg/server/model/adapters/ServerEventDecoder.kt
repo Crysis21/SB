@@ -2,6 +2,7 @@ package ro.holdone.swissborg.server.model.adapters
 
 import com.squareup.moshi.*
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import okio.Buffer
 import org.json.JSONObject
 import ro.holdone.swissborg.server.model.ServerEvent
 import ro.holdone.swissborg.server.model.ServerEventType
@@ -15,9 +16,28 @@ class ServerEventDecoder {
             .build()
     }
 
-    fun fromJson(string: String): ServerEvent? {
-        val json = JSONObject(string)
-        val event = json.getString("event")
+    fun decode(data: String): ServerEvent? {
+        val buffer = Buffer()
+        buffer.readFrom(data.byteInputStream())
+        val reader = JsonReader.of(buffer)
+        return when (val startToken = reader.peek()) {
+            JsonReader.Token.BEGIN_ARRAY -> {
+                // Process channel snapshot update array
+                fromArray(reader)
+            }
+            JsonReader.Token.BEGIN_OBJECT -> {
+                // Process event JSON
+                fromJson(data)
+            }
+            else -> {
+                Timber.e("Invalid token encountered $startToken. We don't know how to processs this event")
+                null
+            }
+        }
+    }
+
+    private fun fromJson(string: String): ServerEvent? {
+        val event = JSONObject(string).getString("event")
         return when (ServerEventType.decode(event)) {
             ServerEventType.PONG -> moshi.adapter(ServerEvent.Pong::class.java).fromJson(string)
             ServerEventType.INFO -> moshi.adapter(ServerEvent.Info::class.java).fromJson(string)
@@ -30,7 +50,7 @@ class ServerEventDecoder {
         }
     }
 
-    fun fromArray(reader: JsonReader): ServerEvent? {
+    private fun fromArray(reader: JsonReader): ServerEvent? {
         reader.beginArray()
         var channelId: Int? = null
         val updates = mutableListOf<Any>()
