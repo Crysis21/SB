@@ -17,8 +17,8 @@ import ro.holdone.swissborg.di.WSOkHttpClient
 import ro.holdone.swissborg.server.ServerManager
 import ro.holdone.swissborg.server.model.ClientAction
 import ro.holdone.swissborg.server.model.ServerEvent
-import ro.holdone.swissborg.server.model.adapters.ClientActionAdapter
-import ro.holdone.swissborg.server.model.adapters.ServerEventAdapter
+import ro.holdone.swissborg.server.model.adapters.ClientActionEncoder
+import ro.holdone.swissborg.server.model.adapters.ServerEventDecoder
 import timber.log.Timber
 import java.net.SocketTimeoutException
 import java.util.concurrent.TimeUnit
@@ -46,8 +46,8 @@ class ServerManagerImpl @Inject constructor(
         }
     private var backlog = mutableListOf<ClientAction>()
 
-    private val clientActionAdapter = ClientActionAdapter()
-    private val serverEventAdapter = ServerEventAdapter()
+    private val clientActionAdapter = ClientActionEncoder()
+    private val serverEventAdapter = ServerEventDecoder()
 
     override val serverEvents: Observable<ServerEvent>
         get() = serverEventsSubject

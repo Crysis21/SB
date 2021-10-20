@@ -1,14 +1,11 @@
 package ro.holdone.swissborg.server.model.adapters
 
-import com.squareup.moshi.FromJson
-import com.squareup.moshi.JsonReader
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.ToJson
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import ro.holdone.swissborg.server.model.ClientAction
 import ro.holdone.swissborg.server.model.ClientActionModel
 
-class ClientActionAdapter {
+class ClientActionEncoder {
 
     companion object {
         private val moshi = Moshi.Builder()
@@ -17,7 +14,6 @@ class ClientActionAdapter {
         private val adapter = moshi.adapter(ClientActionModel::class.java)
     }
 
-    @ToJson
     fun toJson(action: ClientAction): String {
         return when (action) {
             is ClientAction.Ping ->
@@ -52,10 +48,5 @@ class ClientActionAdapter {
                 )
             }
         }
-    }
-
-    @FromJson
-    fun fromJson(string: String): ClientActionModel {
-        throw NotImplementedError("not implemented")
     }
 }

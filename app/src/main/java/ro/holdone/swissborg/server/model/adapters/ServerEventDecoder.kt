@@ -7,7 +7,7 @@ import ro.holdone.swissborg.server.model.ServerEvent
 import ro.holdone.swissborg.server.model.ServerEventType
 import timber.log.Timber
 
-class ServerEventAdapter {
+class ServerEventDecoder {
 
     companion object {
         private val moshi = Moshi.Builder()

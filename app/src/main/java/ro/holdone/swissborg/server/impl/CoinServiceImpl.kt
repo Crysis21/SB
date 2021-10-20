@@ -23,13 +23,13 @@ class CoinServiceImpl @Inject constructor(
     private val coinChannelsLock = ReentrantLock()
     private val bookChannelsLock = ReentrantLock()
 
-
     private val tickerSubjectMap = mutableMapOf<CoinsPair, Subject<TickerSnapshot>>()
     private val tickerChannelMap = mutableMapOf<String, CoinsPair>()
 
     private val bookSubjectMap = mutableMapOf<CoinsPair, BehaviorSubject<BookSnapshot>>()
     private val bookChannelMap = mutableMapOf<String, CoinsPair>()
     private val bookRequests = mutableMapOf<CoinsPair, ClientAction.SubscribeBook>()
+
 
     init {
         serverManager.serverEvents
