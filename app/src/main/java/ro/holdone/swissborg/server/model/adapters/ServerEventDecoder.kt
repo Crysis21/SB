@@ -7,6 +7,7 @@ import org.json.JSONObject
 import ro.holdone.swissborg.server.model.ServerEvent
 import ro.holdone.swissborg.server.model.ServerEventType
 import timber.log.Timber
+import kotlin.jvm.Throws
 
 class ServerEventDecoder {
 
@@ -16,6 +17,7 @@ class ServerEventDecoder {
             .build()
     }
 
+    @Throws
     fun decode(data: String): ServerEvent? {
         val buffer = Buffer()
         buffer.readFrom(data.byteInputStream())

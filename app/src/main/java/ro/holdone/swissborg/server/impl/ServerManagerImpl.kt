@@ -110,7 +110,12 @@ class ServerManagerImpl @Inject constructor(
     private fun processServerEvent(data: String) {
         if (data.isEmpty()) return
 
-        val actualEvent = serverEventDecoder.decode(data) ?: return
+        val actualEvent = try {
+            serverEventDecoder.decode(data) ?: return
+        } catch (e: Throwable) {
+            Timber.e(e)
+            return
+        }
         serverEventsSubject.onNext(actualEvent)
     }
 
@@ -132,7 +137,8 @@ class ServerManagerImpl @Inject constructor(
 
     private fun connectIfNeeded() {
         if (connectionState == ServerManager.ConnectionState.CONNECTING
-            || connectionState == ServerManager.ConnectionState.CONNECTED) return
+            || connectionState == ServerManager.ConnectionState.CONNECTED
+        ) return
 
         if (websocket != null) {
             websocket?.close(1000, null)

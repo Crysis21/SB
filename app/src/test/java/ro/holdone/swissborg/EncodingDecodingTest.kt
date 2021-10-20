@@ -1,6 +1,8 @@
 package ro.holdone.swissborg
 
+import com.squareup.moshi.JsonEncodingException
 import org.json.JSONObject
+import org.junit.Assert.assertThrows
 import org.junit.Test
 
 import ro.holdone.swissborg.server.model.ClientAction
@@ -61,6 +63,20 @@ class EncodingDecodingTest {
         assert(event is ServerEvent.ChannelSnapshot)
     }
 
+    @Test
+    fun `Test Invalid JSON decoding`() {
+        val serverEventDecoder = ServerEventDecoder()
+
+        // Decode subscribe event
+        var event: ServerEvent? = null
+        println("Test invalid subscribe decoding")
+        assertThrows(JsonEncodingException::class.java) {
+            serverEventDecoder.decode(
+                JSON_SUBSCRIBE_INVALID
+            )
+        }
+    }
+
     companion object {
 
         private const val JSON_SUBSCRIBE = "{\n" +
@@ -68,6 +84,12 @@ class EncodingDecodingTest {
                 "  \"channel\": \"ticker\",\n" +
                 "  \"pair\": \"btcusd\",\n" +
                 "  \"chanId\": \"100\"\n" +
+                "}"
+
+        private const val JSON_SUBSCRIBE_INVALID = "{\n" +
+                "  \"event\": \"subscribed\",\n" +
+                "  \"channel\": \"ticker\",\n" +
+                "  \"pair\": \"btcusd\",\n" +
                 "}"
 
         private const val JSON_UNSUBSCRIBE = "{\n" +
